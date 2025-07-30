@@ -22,6 +22,10 @@ class Converter:
             else:
                 img.save(f"{filename}.{target_format}", target_format.upper())
 
+            if target_format == "jpg":
+                img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', "jpeg")
+            else:
+                img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', f"{target_format}")
             print("Done!")
 
         elif mode == "mass":
