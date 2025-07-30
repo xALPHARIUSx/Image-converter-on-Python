@@ -1,32 +1,57 @@
 import os
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor
 
 class Converter:
     def convert(self, original_format, target_format, path, mode):
+        target_format = target_format.lower()
+        original_format = original_format.lower()
+
+        SUPPORTED_FORMATS = {"jpg", "jpeg", "png", "webp", "bmp", "tiff", "gif"}
+        if target_format not in SUPPORTED_FORMATS:
+            print(f"Unsupported format: {target_format}")
+            return
+
         if mode == "single":
-            img = Image.open(f'{path}')
-            if target_format.lower() == "jpg" or target_format.lower() == "jpeg":
+            img = Image.open(path)
+            filename, _ = os.path.splitext(path)
+
+            if target_format in ("jpg", "jpeg"):
                 img = img.convert('RGB')
-            if target_format == "jpg":
-                img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', "jpeg")
-            img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', f"{target_format}")
+                img.save(f"{filename}.{target_format}", "JPEG")
+            else:
+                img.save(f"{filename}.{target_format}", target_format.upper())
+
             print("Done!")
-        if mode == "mass":
-            try:
-                os.mkdir(fr"{path}\result")
-            except:
-                pass
 
-            images = []
-            for x in os.listdir(path):
-                if x.endswith(f".{original_format}"):
-                    images.append(x)
+        elif mode == "mass":
+            result_dir = os.path.join(path, "result")
+            os.makedirs(result_dir, exist_ok=True)
 
-            print("In queue: " + str(images) + "\n")
+            images = [
+                f for f in os.listdir(path)
+                if f.lower().endswith(f".{original_format}")
+            ]
 
-            for i in images:
-                img = Image.open(fr'{path}\{i}')
-                img.save(fr'{path}\result\{i[0:len(i) - len(target_format)+1]}.{target_format.lower()}', f'{target_format.lower()}')
-                print(i + " Done!")
+            print("In queue:", images, "\n")
+
+            def process_image(filename):
+                try:
+                    img = Image.open(os.path.join(path, filename))
+                    name, _ = os.path.splitext(filename)
+                    save_path = os.path.join(result_dir, f"{name}.{target_format}")
+
+                    if target_format in ("jpg", "jpeg"):
+                        img = img.convert("RGB")
+                        img.save(save_path, "JPEG")
+                    else:
+                        img.save(save_path, target_format.upper())
+
+                    print(f"{filename} Done!")
+                except Exception as e:
+                    print(f"{filename} failed: {e}")
+
+            with ThreadPoolExecutor() as executor:
+                executor.map(process_image, images)
 
 converter = Converter()
