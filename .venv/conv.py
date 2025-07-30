@@ -9,7 +9,8 @@ class Converter:
                 img = img.convert('RGB')
             if target_format == "jpg":
                 img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', "jpeg")
-            img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', f"{target_format}")
+            else:
+                img.save(f'{path[0:len(path) - len(target_format)+1]}.{target_format.lower()}', f"{target_format}")
             print("Done!")
         if mode == "mass":
             try:
