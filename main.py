@@ -16,6 +16,8 @@ while True:
             path = input("Input path to folder: ")
         elif mode == "zip":
             path = input("Input path to zip archive: ")
+        
+        converter.convert(original_format=original_format,target_format=target_format,path=path,mode=mode)
 
     elif func == "resize":
 

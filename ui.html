@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IMG TOOL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@400;600&display=swap');
+
+  :root {
+    --bg:        #171717;
+    --panel:     #1f1f1f;
+    --entry:     #111111;
+    --accent:    #e94545;
+    --accent-d:  #a33030;
+    --text:      #eaeaea;
+    --dim:       #666666;
+    --sep:       #2a2a2a;
+    --ok:        #5af078;
+    --mono:      'Share Tech Mono', monospace;
+    --display:   'Teko', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+    -webkit-app-region: drag;
+  }
+
+  /* ── шапка ───────────────────────────────────────────────────────────── */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--sep);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .logo span { color: var(--dim); font-size: 14px; font-family: var(--mono); margin-left: 8px; vertical-align: middle; }
+  .func-tabs { display: flex; gap: 4px; }
+  .func-tabs button {
+    background: transparent;
+    border: none;
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: color .15s;
+    -webkit-app-region: no-drag;
+  }
+  .func-tabs button:hover { color: var(--text); }
+  .func-tabs button.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+  /* ── тело ────────────────────────────────────────────────────────────── */
+  main {
+    flex: 1;
+    padding: 20px 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+  }
+
+  /* ── секция ──────────────────────────────────────────────────────────── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .section-label > span:first-child {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--sep);
+  }
+
+  /* ── флажок FULL LOG в заголовке лога ───────────────────────────────── */
+  .fulllog-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    margin-left: 4px;
+    /* вклинивается между заголовком и ::after-линией */
+    order: 2;
+    z-index: 1;
+  }
+  .fulllog-toggle::after { display: none; } /* убираем псевдо-линию внутри label */
+  .fulllog-toggle input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 12px; height: 12px;
+    cursor: pointer;
+  }
+  .fulllog-toggle span {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--dim);
+    transition: color .15s;
+    white-space: nowrap;
+  }
+  .fulllog-toggle input:checked + span { color: var(--accent); }
+
+  /* ── панель параметров ───────────────────────────────────────────────── */
+  .params-panel { animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .field-group { display: flex; align-items: center; gap: 8px; }
+  .field-group label { color: var(--dim); font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
+
+  select {
+    background: var(--entry);
+    color: var(--text);
+    border: 1px solid var(--sep);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 8px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23e94545'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+    transition: border-color .15s;
+  }
+  select:focus { border-color: var(--accent); }
+  select option { background: var(--entry); color: var(--text); }
+
+  input[type="text"], input[type="number"] {
+    background: var(--entry);
+    color: var(--text);
+    border: 1px solid var(--sep);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 8px;
+    outline: none;
+    transition: border-color .15s;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus { border-color: var(--accent); }
+  input[type="number"] { width: 72px; }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 10px; cursor: pointer;
+  }
+  .checkbox-row input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+  .checkbox-row span { color: var(--dim); font-size: 11px; letter-spacing: 1px; }
+
+  .mode-group { display: flex; gap: 6px; }
+  .mode-btn {
+    background: var(--entry);
+    border: 1px solid var(--sep);
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .mode-btn:hover { color: var(--text); border-color: #444; }
+  .mode-btn.active { color: var(--accent); border-color: var(--accent); background: #1e1010; }
+
+  .path-row { display: flex; gap: 8px; }
+  .path-row input[type="text"] { flex: 1; padding: 7px 10px; }
+  .browse-btn {
+    background: var(--panel);
+    border: 1px solid var(--sep);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 0 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .browse-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .run-btn {
+    background: var(--accent);
+    border: none;
+    color: var(--bg);
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    padding: 10px 36px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    align-self: flex-start;
+  }
+  .run-btn:hover { background: #ff5555; }
+  .run-btn:active { transform: scale(.97); }
+  .run-btn:disabled { background: #4a1a1a; color: #7a3a3a; cursor: not-allowed; transform: none; }
+
+  /* ── лог ─────────────────────────────────────────────────────────────── */
+  .log-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #log {
+    flex: 1;
+    background: var(--entry);
+    border: 1px solid var(--sep);
+    padding: 10px 12px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.7;
+    min-height: 80px;
+  }
+  #log::-webkit-scrollbar { width: 4px; }
+  #log::-webkit-scrollbar-track { background: var(--entry); }
+  #log::-webkit-scrollbar-thumb { background: var(--sep); }
+  .log-inf   { color: var(--dim); }
+  .log-ok    { color: var(--ok); }
+  .log-err   { color: var(--accent); }
+  .log-warn  { color: #f0c040; }
+  .log-print { color: #8ab4d4; }   /* print()-строки — голубоватый */
+
+  footer {
+    text-align: right;
+    padding: 6px 24px 10px;
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 2px solid var(--sep);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── прогресс-бар ────────────────────────────────────────────────────── */
+  .progress-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .progress-wrap.visible { display: flex; }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--dim);
+  }
+  .progress-header .p-label { color: var(--accent); }
+  .progress-track {
+    height: 4px;
+    background: var(--sep);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width .25s ease;
+  }
+  /* анимация ожидания для single-режима */
+  .progress-fill.indeterminate {
+    width: 30% !important;
+    animation: indeterminate 1.2s ease-in-out infinite;
+  }
+  @keyframes indeterminate {
+    0%   { left: -30%; }
+    100% { left: 110%; }
+  }
+  .progress-fill.indeterminate { position: absolute; }
+
+  /* ── слайдер качества ────────────────────────────────────────────────── */
+  .quality-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .quality-presets {
+    display: flex;
+    gap: 4px;
+  }
+  .q-preset {
+    background: var(--entry);
+    border: 1px solid var(--sep);
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .q-preset:hover { color: var(--text); border-color: #444; }
+  .q-preset.active { color: var(--accent); border-color: var(--accent); background: #1e1010; }
+
+  .quality-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 160px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    flex: 1;
+    height: 3px;
+    background: var(--sep);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { background: #ff5555; }
+  .quality-val {
+    font-size: 11px;
+    color: var(--text);
+    min-width: 28px;
+    text-align: right;
+  }
+  .quality-hint {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+  /* скрыть для форматов без настройки */
+  .quality-wrap.disabled { opacity: 0.3; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">IMG TOOL <span>v2</span></div>
+  <div class="func-tabs">
+    <button id="tab-convert" class="active" onclick="switchFunc('convert')">CONVERT</button>
+    <button id="tab-resize"  onclick="switchFunc('resize')">RESIZE</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- CONVERT params -->
+  <div id="panel-convert" class="params-panel">
+    <div class="section-label"><span>FORMATS</span></div>
+    <div class="row">
+      <div class="field-group">
+        <label>FROM</label>
+        <select id="orig-fmt">
+          <option>png</option><option>jpg</option><option>jpeg</option>
+          <option>webp</option><option>bmp</option><option>tiff</option><option>gif</option>
+        </select>
+      </div>
+      <div style="color:var(--dim)">→</div>
+      <div class="field-group">
+        <label>TO</label>
+        <select id="tgt-fmt" onchange="updateQualityUI()">
+          <option>jpg</option><option>jpeg</option><option>png</option>
+          <option>webp</option><option>bmp</option><option>tiff</option><option>gif</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="quality-wrap" id="quality-wrap">
+      <div class="quality-row">
+        <div class="quality-presets" id="quality-presets">
+          <button class="q-preset" data-val="20" onclick="setQuality(20)">LOW</button>
+          <button class="q-preset active" data-val="50" onclick="setQuality(50)">MED</button>
+          <button class="q-preset" data-val="95" onclick="setQuality(85)">HIGH</button>
+          <button class="q-preset" data-val="100" onclick="setQuality(100)">MAX</button>
+        </div>
+        <div class="quality-slider-wrap">
+          <input type="range" id="quality-slider" min="0" max="100" value="50"
+                 oninput="onQualitySlide(this.value)"/>
+          <span class="quality-val" id="quality-val">50</span>
+        </div>
+      </div>
+      <div class="quality-hint" id="quality-hint"></div>
+    </div>
+  </div>
+
+  <!-- RESIZE params -->
+  <div id="panel-resize" class="params-panel" style="display:none">
+    <div class="section-label"><span>DIMENSIONS</span></div>
+    <div class="row">
+      <div class="field-group">
+        <label>WIDTH</label>
+        <input type="number" id="r-width" value="800" min="1"/>
+      </div>
+      <div class="field-group">
+        <label>HEIGHT</label>
+        <input type="number" id="r-height" value="600" min="1"/>
+      </div>
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" id="keep-prop" checked/>
+      <span>KEEP PROPORTIONS</span>
+    </label>
+  </div>
+
+  <!-- MODE -->
+  <div>
+    <div class="section-label"><span>MODE</span></div>
+    <div class="mode-group">
+      <button class="mode-btn active" data-mode="single" onclick="switchMode(this)">SINGLE FILE</button>
+      <button class="mode-btn"        data-mode="mass"   onclick="switchMode(this)">FOLDER</button>
+      <button class="mode-btn"        data-mode="zip"    onclick="switchMode(this)">ZIP</button>
+    </div>
+  </div>
+
+  <!-- PATH -->
+  <div>
+    <div class="section-label"><span>PATH</span></div>
+    <div class="path-row">
+      <input type="text" id="path-input" placeholder="Select or paste path…" spellcheck="false"/>
+      <button class="browse-btn" onclick="browse()">BROWSE</button>
+    </div>
+  </div>
+
+  <!-- RUN -->
+  <button class="run-btn" id="run-btn" onclick="run()">▶ RUN</button>
+
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-header">
+      <span class="p-label">PROGRESS</span>
+      <span id="progress-etc" style="color:var(--dim)"></span>
+      <span id="progress-text">0 / 0</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-wrap">
+    <div class="section-label">
+      <span>LOG</span>
+      <label class="fulllog-toggle">
+        <input type="checkbox" id="full-log" onchange="toggleFullLog(this.checked)"/>
+        <span>FULL LOG</span>
+      </label>
+    </div>
+    <div id="log"></div>
+  </div>
+
+</main>
+
+<footer>made by xALPHARIUSx</footer>
+
+<script>
+
+  /* ── прогресс-бар ────────────────────────────────────────────────────── */
+  let _pTotal = 0;
+
+  function progressInit(total) {
+    _pTotal = total;
+    const wrap = document.getElementById('progress-wrap');
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const etc  = document.getElementById('progress-etc');
+    wrap.classList.add('visible');
+    fill.classList.remove('indeterminate');
+    fill.style.width = '0%';
+    text.textContent = `0 / ${total}`;
+    etc.textContent  = '';
+  }
+
+  function progressUpdate(done, total, etcStr) {
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const etc  = document.getElementById('progress-etc');
+    const pct  = total > 0 ? (done / total) * 100 : 100;
+    fill.style.width = pct + '%';
+    text.textContent = `${done} / ${total}`;
+    etc.textContent  = done < total ? `ETC ${etcStr}` : '';
+  }
+
+  function progressReset() {
+    _pTotal = 0;
+    const wrap = document.getElementById('progress-wrap');
+    const fill = document.getElementById('progress-fill');
+    const etc  = document.getElementById('progress-etc');
+    wrap.classList.remove('visible');
+    fill.classList.remove('indeterminate');
+    fill.style.width = '0%';
+    etc.textContent  = '';
+  }
+
+  function progressIndeterminate() {
+    const wrap = document.getElementById('progress-wrap');
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    wrap.classList.add('visible');
+    fill.classList.add('indeterminate');
+    text.textContent = '…';
+  }
+
+
+  /* ── качество конвертации ─────────────────────────────────────────────── */
+  const QUALITY_HINTS = {
+    jpg:  (v) => `JPEG quality ${Math.round(v*95/100)}/95 — ${v<40?'aggressive compression':v<75?'moderate':'high fidelity'}`,
+    jpeg: (v) => `JPEG quality ${Math.round(v*95/100)}/95 — ${v<40?'aggressive compression':v<75?'moderate':'high fidelity'}`,
+    webp: (v) => `WebP quality ${v}/100 — ${v<40?'aggressive compression':v<75?'moderate':'high fidelity'}`,
+    png:  (v) => `PNG compress level ${Math.round((100-v)*9/100)}/9 — lossless${v<30?' (slow, smaller file)':v<70?' (balanced)':' (fast, larger file [WARNING: file size can be absurdly large])'}`,
+  };
+
+  function updateQualityUI() {
+    const fmt  = document.getElementById('tgt-fmt').value;
+    const wrap = document.getElementById('quality-wrap');
+    const hint = document.getElementById('quality-hint');
+    const val  = parseInt(document.getElementById('quality-slider').value);
+
+    const supported = ['jpg','jpeg','webp','png'];
+    if (!supported.includes(fmt)) {
+      wrap.classList.add('disabled');
+      hint.textContent = fmt.toUpperCase() + ' — quality not configurable';
+      return;
+    }
+    wrap.classList.remove('disabled');
+    hint.textContent = QUALITY_HINTS[fmt] ? QUALITY_HINTS[fmt](val) : '';
+  }
+
+  function setQuality(val) {
+    document.getElementById('quality-slider').value = val;
+    document.getElementById('quality-val').textContent = val;
+    document.querySelectorAll('.q-preset').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.val) === val);
+    });
+    updateQualityUI();
+  }
+
+  function onQualitySlide(val) {
+    val = parseInt(val);
+    document.getElementById('quality-val').textContent = val;
+    // снять все пресеты, подсветить совпадающий
+    document.querySelectorAll('.q-preset').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.val) === val);
+    });
+    updateQualityUI();
+  }
+
+  let currentFunc = 'convert';
+  let currentMode = 'single';
+
+  function switchFunc(func) {
+    currentFunc = func;
+    document.getElementById('panel-convert').style.display = func === 'convert' ? '' : 'none';
+    document.getElementById('panel-resize').style.display  = func === 'resize'  ? '' : 'none';
+    document.getElementById('tab-convert').classList.toggle('active', func === 'convert');
+    document.getElementById('tab-resize').classList.toggle('active',  func === 'resize');
+    updateQualityUI();
+  }
+
+  function switchMode(btn) {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    document.getElementById('path-input').value = '';
+  }
+
+  async function browse() {
+    let path = '';
+    if (currentMode === 'mass') {
+      path = await window.pywebview.api.pick_folder();
+    } else if (currentMode === 'zip') {
+      path = await window.pywebview.api.pick_file(['ZIP Archive (*.zip)']);
+    } else {
+      path = await window.pywebview.api.pick_file([
+        'Images (*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.tiff;*.gif)'
+      ]);
+    }
+    if (path) document.getElementById('path-input').value = path;
+  }
+
+  /* ── флажок FULL LOG ──────────────────────────────────────────────────── */
+  async function toggleFullLog(enabled) {
+    await window.pywebview.api.set_full_log(enabled);
+    log(`Full log ${enabled ? 'enabled' : 'disabled'}.`, 'inf');
+  }
+
+  /* ── получатель print()-строк из Python ──────────────────────────────── */
+  function logPrint(msg) {
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    line.className = 'log-print';
+    line.innerHTML = `<span style="color:#2a3a4a">  ┃ </span>${escHtml(msg)}`;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  /* ── лог ──────────────────────────────────────────────────────────────── */
+  function log(msg, type = 'inf') {
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    line.className = `log-${type}`;
+    const ts = new Date().toLocaleTimeString('en-GB', {hour12: false});
+    line.innerHTML = `<span style="color:#333">[${ts}]</span> ${escHtml(msg)}`;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function logSpinner(msg) {
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    line.className = 'log-inf';
+    line.id = 'log-spinner';
+    line.innerHTML = `<span class="spinner"></span>${escHtml(msg)}`;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function removeSpinner() {
+    const s = document.getElementById('log-spinner');
+    if (s) s.remove();
+  }
+
+  /* ── запуск ───────────────────────────────────────────────────────────── */
+  async function run() {
+    const path = document.getElementById('path-input').value.trim();
+    if (!path) { log('No path specified.', 'warn'); return; }
+
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    progressReset();
+    if (currentMode !== 'single') {
+      // прогресс появится когда придёт progressInit() из stdout
+    } else {
+      progressIndeterminate();
+    }
+    logSpinner(currentFunc === 'convert'
+      ? `Converting [${currentMode}] ${path}`
+      : `Resizing [${currentMode}] ${path}`);
+
+    let result;
+    try {
+      if (currentFunc === 'convert') {
+        const orig = document.getElementById('orig-fmt').value;
+        const tgt  = document.getElementById('tgt-fmt').value;
+        const quality = document.getElementById('quality-slider').value;
+        result = await window.pywebview.api.convert(orig, tgt, path, currentMode, quality);
+      } else {
+        const w    = document.getElementById('r-width').value;
+        const h    = document.getElementById('r-height').value;
+        const keep = document.getElementById('keep-prop').checked;
+        result = await window.pywebview.api.resize(w, h, path, currentMode, keep);
+      }
+    } catch(e) {
+      result = { ok: false, msg: String(e) };
+    }
+
+    removeSpinner();
+    progressReset();
+    log(result.msg, result.ok ? 'ok' : 'err');
+    btn.disabled = false;
+  }
+
+  /* ── инициализация ────────────────────────────────────────────────────── */
+  window.addEventListener('pywebviewready', async () => {
+    const s = await window.pywebview.api.module_status();
+    if (!s.conv) log('WARNING: conv.py not found — convert unavailable.', 'warn');
+    if (!s.resz) log('WARNING: resz.py not found — resize unavailable.', 'warn');
+    if (s.conv && s.resz) log('Modules loaded. Ready.', 'inf');
+    updateQualityUI();
+  });
+</script>
+</body>
+</html>
